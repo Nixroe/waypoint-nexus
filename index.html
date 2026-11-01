@@ -24549,9 +24549,10 @@ function wnLoginHtml(p){const esc=escapeHtml,st=WN_LOGIN_ST[p.account_status]||W
     '<div class="wn-login-acts">'+acts+(msg?'<span class="wn-login-msg">'+esc(msg)+'</span>':'')+'</div>'+
     (pw?'<div class="wn-login-temp">Temporary password: <code>'+esc(pw)+'</code><button type="button" class="btn-ghost" data-wn-login-copy>Copy</button><span>Shown once. They sign in with it and then set their own.</span></div>':'')}
 const z22WorkBase=peoplePersonnelWork;
-peoplePersonnelWork=function(d){const h=z22WorkBase.apply(this,arguments);try{if(d&&d.id&&wnLoginCan()){if(WN_LOGIN.pid!==String(d.id))WN_LOGIN={pid:String(d.id),pw:'',busy:false,msg:''};return h+peopleGroup('Login','<div class="wn-login" data-wn-login-for="'+escapeHtml(d.id)+'">'+wnLoginHtml(d)+'</div>')}}catch(e){console.error(e)}return h};
-function wnLoginRedraw(){document.querySelectorAll('[data-wn-login-for]').forEach(b=>{const p=peopleEd.personnel&&peopleEd.personnel.draft;if(p&&String(p.id)===b.dataset.wnLoginFor)b.innerHTML=wnLoginHtml(p)})}
-async function wnLoginCall(action,extra){const p=peopleEd.personnel&&peopleEd.personnel.draft;if(!p||!p.id||!wnLoginCan())return;if(WN_LOGIN.busy)return;
+peoplePersonnelWork=function(d){const h=z22WorkBase.apply(this,arguments);try{const p=d&&d.person;if(p&&p.id&&wnLoginCan()){if(WN_LOGIN.pid!==String(p.id))WN_LOGIN={pid:String(p.id),pw:'',busy:false,msg:''};return h+peopleGroup('Login','<div class="wn-login" data-wn-login-for="'+escapeHtml(p.id)+'">'+wnLoginHtml(p)+'</div>')}}catch(e){console.error(e)}return h};
+function wnLoginPerson(){const d=peopleEd.personnel&&peopleEd.personnel.draft;return d&&d.person||null}
+function wnLoginRedraw(){document.querySelectorAll('[data-wn-login-for]').forEach(b=>{const p=wnLoginPerson();if(p&&String(p.id)===b.dataset.wnLoginFor)b.innerHTML=wnLoginHtml(p)})}
+async function wnLoginCall(action,extra){const p=wnLoginPerson();if(!p||!p.id||!wnLoginCan())return;if(WN_LOGIN.busy)return;
   const box=document.querySelector('[data-wn-login-email]'),login=String((box&&box.value)||p.login_email||'').trim();
   WN_LOGIN={pid:String(p.id),pw:'',busy:true,msg:'Working…'};wnLoginRedraw();
   try{const {data,error}=await sb.functions.invoke('waypoint-logins',{body:Object.assign({action,personnelId:String(p.id),loginEmail:login},extra||{})});
@@ -24563,7 +24564,7 @@ document.addEventListener('click',e=>{const t=e.target;if(!t||!t.closest)return;
     if(a==='off'){if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='Turn Off? Click again';return}}
     wnLoginCall(a).catch(console.error);return}
   if(t.closest('[data-wn-login-copy]')){e.preventDefault();try{navigator.clipboard.writeText(WN_LOGIN.pw).then(()=>toast('Copied'))}catch(_){}}});
-document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset||t.dataset.wnLoginEmail===undefined)return;const p=peopleEd.personnel&&peopleEd.personnel.draft;if(!p)return;
+document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset||t.dataset.wnLoginEmail===undefined)return;const p=wnLoginPerson();if(!p)return;
   if(String(p.login_user_id||'').trim()&&String(t.value||'').trim()&&orgNameKey(t.value)!==orgNameKey(p.login_email||''))wnLoginCall('email').catch(console.error)});
 /* ---- Set Your Password (first sign-in on a temporary password) and Change Password ---- */
 function wnPwOpen(forced){let o=document.getElementById('wn-pw-overlay');if(!o){o=document.createElement('div');o.className='overlay';o.id='wn-pw-overlay';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');document.body.appendChild(o)}
